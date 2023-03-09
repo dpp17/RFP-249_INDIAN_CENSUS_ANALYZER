@@ -14,13 +14,16 @@ import com.opencsv.CSVReader;
 
 import indianstatecensusanalyzer.exceptions.SelfMadeRuntimeCustomExceptions;
 import indianstatecensusanalyzer.model.IndianCensusData;
+import indianstatecensusanalyzer.model.StateCSV;
 import indianstatecensusanalyzer.utility.ExceptionType;
 
 public class StateCensusAnalyser {
 
 	private static Scanner option = new Scanner(System.in);
     public static ArrayList<IndianCensusData> indianCensusList = new ArrayList<IndianCensusData>();
-
+    public static List<StateCSV> stateCodeList = new ArrayList<>();
+    public static int i = 0;
+    
     private static void createFile(File file) {
     	try {
 			if(file.createNewFile()) {
@@ -31,6 +34,33 @@ public class StateCensusAnalyser {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+    }
+    
+
+    public static int loadStateData(String filePath) throws Exception {
+        try {
+            i = 0;
+            stateCodeList = new ArrayList<>();
+            CSVReader reader = new CSVReader(new FileReader(filePath));
+            List<String[]> data = reader.readAll();
+            data.stream().forEach(n -> {
+                Iterator<String> iterate = Arrays.stream(n).iterator();
+                String srNo = iterate.next();
+                String state = iterate.next();
+                String TIN = iterate.next();
+                String stateCode = iterate.next();
+                if (i == 0)
+                    i = 1;
+                else
+                    stateCodeList.add(new StateCSV(Integer.valueOf(srNo), state, Integer.valueOf(TIN), stateCode));
+            });
+            reader.close();
+        } catch (FileNotFoundException e) {
+            throw new SelfMadeRuntimeCustomExceptions(e.getMessage(), ExceptionType.File_Not_Found);
+        } catch (IllegalStateException e) {
+            throw new SelfMadeRuntimeCustomExceptions(e.getMessage(), ExceptionType.Parse_Error);
+        }
+        return stateCodeList.size();
     }
     
     public static int loadCensusData(String filePath) throws Exception {
@@ -60,6 +90,7 @@ public class StateCensusAnalyser {
     	final String filePath = "StateCensus.csv";
     	File file = new File(filePath);
     	
+    	System.out.println("Press 1: create file"+'\n'+"Press 2: Load CensusData"+'\n'+"Press 3:load State Data");
     	switch (option.nextByte()) {
 		case 1:
 			createFile(file);
@@ -68,9 +99,8 @@ public class StateCensusAnalyser {
 			loadCensusData(filePath);
 			break;
 		case 3:
-	
+			loadStateData(filePath);
 			break;
-
 		default:
 		}
     	
